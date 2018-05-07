@@ -6,8 +6,10 @@ import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
+import org.apache.shiro.crypto.hash.Md5Hash;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.util.ByteSource;
 
 import java.util.*;
 
@@ -16,7 +18,7 @@ public class CustomRealm extends AuthorizingRealm {
     Map<String, String> userMap = new HashMap<String, String>(16);
 
     {
-        userMap.put("mark", "123");
+        userMap.put("mark", "6d295738eb6579053ac46a9ca1902583");
         super.setName("customRealm");
     }
 
@@ -74,8 +76,9 @@ public class CustomRealm extends AuthorizingRealm {
             return null;
         }
         SimpleAuthenticationInfo authenticationInfo = new SimpleAuthenticationInfo("mark",
-                password, "custom");
-
+                password, "customRealm");
+        // 加盐
+        authenticationInfo.setCredentialsSalt(ByteSource.Util.bytes("mark"));
         return authenticationInfo;
     }
 
@@ -88,4 +91,11 @@ public class CustomRealm extends AuthorizingRealm {
     private String getPasswordByUserName(String userName) {
         return userMap.get(userName);
     }
+
+    public static void main(String[] args) {
+        Md5Hash md5Hash = new Md5Hash("123","mark");
+        System.out.println(md5Hash);
+    }
+
+
 }
