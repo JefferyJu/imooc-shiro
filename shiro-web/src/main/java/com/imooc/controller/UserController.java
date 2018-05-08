@@ -22,12 +22,12 @@ public class UserController {
     @ResponseBody
     public String subLogin(User user) {
         Subject subject = SecurityUtils.getSubject();
-        UsernamePasswordToken token = new UsernamePasswordToken(user.getUsername(),
+        UsernamePasswordToken token1 = new UsernamePasswordToken(user.getUsername(),
                 user.getPassword());
         try {
-            subject.login(token);
-        } catch (AuthenticationException e) {
-            return e.getMessage();
+            subject.login(token1);
+        } catch (AuthenticationException e1) {
+            return e1.getMessage();
         }
 
         return "登陆成功";
