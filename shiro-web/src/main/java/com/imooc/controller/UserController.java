@@ -4,6 +4,8 @@ import com.imooc.vo.User;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.subject.Subject;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,14 +24,38 @@ public class UserController {
     @ResponseBody
     public String subLogin(User user) {
         Subject subject = SecurityUtils.getSubject();
-        UsernamePasswordToken token1 = new UsernamePasswordToken(user.getUsername(),
+        UsernamePasswordToken token = new UsernamePasswordToken(user.getUsername(),
                 user.getPassword());
         try {
-            subject.login(token1);
-        } catch (AuthenticationException e1) {
-            return e1.getMessage();
+            subject.login(token);
+        } catch (AuthenticationException e) {
+            return e.getMessage();
         }
 
+        if (subject.hasRole("admin")) {
+            return "有admin权限";
+        }
         return "登陆成功";
+    }
+
+    @RequiresRoles("admin")
+    @RequestMapping(value = "/testRole", method = RequestMethod.GET)
+    @ResponseBody
+    public String testRole() {
+        return "testRole success";
+    }
+
+
+    @RequiresPermissions("admin1")
+    @RequestMapping(value = "/testRole1", method = RequestMethod.GET)
+    @ResponseBody
+    public String testRole1() {
+        return "testRole1 success";
+    }
+
+    @RequestMapping(value = "/testPerms", method = RequestMethod.GET)
+    @ResponseBody
+    public String testPerms() {
+        return "testPerms success";
     }
 }

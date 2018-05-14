@@ -1,5 +1,7 @@
 package com.imooc.shiro.realm;
 
+import com.imooc.dao.UserDao;
+import com.imooc.vo.User;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -11,10 +13,9 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.util.ByteSource;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import javax.annotation.Resource;
+import java.util.*;
+
 /**
  * 自定义Realm
  *
@@ -23,12 +24,15 @@ import java.util.Set;
  */
 public class CustomRealm extends AuthorizingRealm {
 
-    Map<String, String> userMap = new HashMap<String, String>(16);
+    //Map<String, String> userMap = new HashMap<String, String>(16);
+    //
+    //    {
+    //    userMap.put("mark", "6d295738eb6579053ac46a9ca1902583");
+    //    super.setName("customRealm");
+    //}
 
-        {
-        userMap.put("mark", "6d295738eb6579053ac46a9ca1902583");
-        super.setName("customRealm");
-    }
+    @Resource
+    private UserDao userDao;
 
     /**
      * 授权过程
@@ -40,7 +44,7 @@ public class CustomRealm extends AuthorizingRealm {
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
         String userName = (String) principalCollection.getPrimaryPrincipal();
         // 从数据库或者缓存中获取角色数据
-        Set<String> roles = getRoleByUserName(userName);
+        Set<String> roles = getRolesByUserName(userName);
 
         Set<String> permissions = getPermissionsByUserName();
 
@@ -51,6 +55,10 @@ public class CustomRealm extends AuthorizingRealm {
         return simpleAuthorizationInfo;
     }
 
+    /**
+     *
+     * @return
+     */
     private Set<String> getPermissionsByUserName() {
         Set<String> sets = new HashSet<String>();
         sets.add("user:delete");
@@ -58,10 +66,14 @@ public class CustomRealm extends AuthorizingRealm {
         return sets;
     }
 
-    private Set<String> getRoleByUserName(String userName) {
-        Set<String> sets = new HashSet<String>();
-        sets.add("admin");
-        sets.add("user");
+    /**
+     *
+     * @param userName
+     * @return
+     */
+    private Set<String> getRolesByUserName(String userName) {
+        List<String> list = userDao.queryRolesByUserName(userName);
+        Set<String> sets = new HashSet<String>(list);
         return sets;
     }
 
@@ -83,10 +95,10 @@ public class CustomRealm extends AuthorizingRealm {
         if (password == null) {
             return null;
         }
-        SimpleAuthenticationInfo authenticationInfo = new SimpleAuthenticationInfo("mark",
+        SimpleAuthenticationInfo authenticationInfo = new SimpleAuthenticationInfo(userName,
                 password, "customRealm");
         // 加盐
-        authenticationInfo.setCredentialsSalt(ByteSource.Util.bytes("mark"));
+        authenticationInfo.setCredentialsSalt(ByteSource.Util.bytes(userName));
         return authenticationInfo;
     }
 
@@ -97,7 +109,11 @@ public class CustomRealm extends AuthorizingRealm {
      * @return
      */
     private String getPasswordByUserName(String userName) {
-        return userMap.get(userName);
+        User user = userDao.getUserByUserName(userName);
+        if (user != null) {
+            return user.getPassword();
+        }
+        return null;
     }
 
     public static void main(String[] args) {
